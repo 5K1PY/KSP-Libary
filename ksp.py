@@ -4,6 +4,7 @@ import time
 class ksp_instance():
     def __init__(self, file_name):
         self.start_time = time.time()
+        self.last_time = self.start_time
         self.file_name = file_name
 
     def read(self, suffix=".in"):
@@ -36,8 +37,8 @@ class ksp_instance():
 
     def reset(self):
         """Resets time"""
-        self.start_time = time.time()
+        self.last_time = time.time()
 
     def time(self):
         """Returns time from start."""
-        return time.time() - self.start_time
+        return time.time() - self.last_time
