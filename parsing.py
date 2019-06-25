@@ -41,7 +41,7 @@ class ParseMachine():
                 for character in r:
                     if not ord("a") <= ord(character) <= ord("z"):
                         raise SyntaxError("Cannot repeat sequence " + repeat + " on line " + l + ".")
-                if defined[r] is True:
+                if r in defined:
                     raise SyntaxError(r + " is defined earlier than on line " + l + ".")
                 else:
                     defined[r] = True
@@ -49,15 +49,35 @@ class ParseMachine():
 
             l = str(int(l) + 1)
 
-    def parse(self):
+    def parse(self, file):
         saved = {}
-        for key in self.key:
+        for line in range(len(self.key)):
+            key = self.key[line]
             for (variable, t) in key[2]:
                 saved[variable] = t
-            i = 0
-            if key[2] == 1:
-                pass
+            if key[1] == 1:
+                char = file.read(1)
+                while char == " ":
+                    char = file.read(1)
+                i = 0
+                var = ""
+                while char != "\n":
+                    if char == " " and len(key[2]) != 1:
+                        while char == " ":
+                            char = file.read(1)
+                        if char == "\n":
+                            continue
+                        if i == len(key[2]):
+                            raise ValueError("More variables in file than in key on line " + line + ".")
+                        saved[key[2][i][0]] = var
+                        var = char
+                        i += 1
+                    else:
+                        var += char
+                    char = file.read(1)
+                saved[key[2][i][0]] = var
             else:
                 pass
 
-p = ParseMachine("f", "n, m\n\nn: a\nm: b")
+p = ParseMachine("f", "n, m\n\nn: a")
+p.parse(open("file.in", "r"))
