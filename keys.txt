@@ -2,8 +2,7 @@ n
 n: a
 
 n, m
-n: a
-m: b
+n:m: a, b
 
 n
 n: a

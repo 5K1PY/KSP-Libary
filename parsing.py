@@ -23,7 +23,7 @@ class ParseMachine():
             self.key[-1][0] = indentation
 
             while ":" in line[i:]:
-                repeat = line[i:line.index(":")]
+                repeat = line[i:line.index(":", i)]
                 for r in repeat:
                     if not ord("a") <= ord(r) <= ord("z"):
                         raise SyntaxError("Cannot repeat sequence " + repeat + " on line " + l + ".")
@@ -115,7 +115,6 @@ class ParseMachine():
 
 p = ParseMachine("f", """
 n, m
-n: a
-m: b
+n:m: a
 """)
-p.parse(open("file.in", "r"))
+print(p.parse(open("file.in", "r")))
