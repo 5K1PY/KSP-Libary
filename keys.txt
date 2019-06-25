@@ -10,5 +10,10 @@ n: a
   a: b, c
 
 n
+n: a
+  a: b
+    1: c
+
+n
 n: a | {a:0}
   a: b, c | [[b]] {c: b}

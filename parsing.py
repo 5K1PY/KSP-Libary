@@ -50,34 +50,72 @@ class ParseMachine():
             l = str(int(l) + 1)
 
     def parse(self, file):
-        saved = {}
-        for line in range(len(self.key)):
+        self.saved = {}
+        self.file = file
+        stack = []
+        line = 0
+        while line < len(self.key):
             key = self.key[line]
             for (variable, t) in key[2]:
-                saved[variable] = t
+                self.saved[variable] = t
             if key[1] == 1:
-                char = file.read(1)
-                while char == " ":
-                    char = file.read(1)
-                i = 0
-                var = ""
-                while char != "\n":
-                    if char == " " and len(key[2]) != 1:
-                        while char == " ":
-                            char = file.read(1)
-                        if char == "\n":
-                            continue
-                        if i == len(key[2]):
-                            raise ValueError("More variables in file than in key on line " + line + ".")
-                        saved[key[2][i][0]] = var
-                        var = char
-                        i += 1
-                    else:
-                        var += char
-                    char = file.read(1)
-                saved[key[2][i][0]] = var
+                self.parse_line(key, line)
             else:
-                pass
+                if key[0] < self.key[line][0]:
+                    raise NotImplementedError()
+                else:
+                    repeat = 1
+                    for var in key[1]:
+                        if type(self.saved[var]) == str:
+                            try:
+                                repeat *= int(self.saved[var])
+                            except ValueError:
+                                raise ValueError("On line " + line + " variable " + var + " cannot be converted to integer")
+                        elif type(self.saved[var]) == list:
+                            try:
+                                repeat *= int(self.saved[var][-1])
+                            except ValueError:
+                                raise ValueError("On line " + line + " last element of list " + var + " cannot be converted to integer.")
+                        else:
+                            raise NotImplementedError()
+                    for _ in range(repeat):
+                        self.parse_line(key, line)
+            line += 1
 
-p = ParseMachine("f", "n, m\n\nn: a")
+        return self.saved
+
+    def parse_line(self, key, line):
+        char = self.file.read(1)
+        while char == " ":
+            char = self.file.read(1)
+        i = 0
+        var = ""
+        while char != "\n" and char != "":
+            if char == " " and len(key[2]) != 1:
+                while char == " ":
+                    char = self.file.read(1)
+                if char == "\n" or char == "":
+                    continue
+                if i == len(key[2]):
+                    raise ValueError("More variables in file than in key on line " + line + ".")
+                if key[2][i][1] is None:
+                    self.saved[key[2][i][0]] = var
+                else:
+                    self.saved[key[2][i][0]].append(var)
+                var = char
+                i += 1
+            else:
+                var += char
+            char = self.file.read(1)
+        if key[2][i][1] is None:
+            self.saved[key[2][i][0]] = var
+        else:
+            self.saved[key[2][i][0]].append(var)
+
+
+p = ParseMachine("f", """
+n, m
+n: a
+m: b
+""")
 p.parse(open("file.in", "r"))
