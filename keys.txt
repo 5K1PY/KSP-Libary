@@ -14,5 +14,7 @@ n: a
     1: c
 
 n
-n: a | {a:0}
-  a: b, c | [[b]] {c: b}
+n: a
+  a: b
+    c, d
+      c: e

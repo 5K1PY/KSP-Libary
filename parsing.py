@@ -1,6 +1,5 @@
 class ParseMachine():
-    def __init__(self, file, key):
-        self.file = file
+    def __init__(self, key):
         self.key = []
         key = key.split("\n")
         l = "0"
@@ -12,13 +11,13 @@ class ParseMachine():
             indentation = 0
             i = 0
             while line[i] == " ":
-                if not line[i+1] != " ":
+                if line[i+1] != " ":
                     raise IndentationError("Wrong indentation on line " + l + ". Not even number of spaces.")
                 i += 2
                 indentation += 1
-            if indentation > 0 and (line == 0 or line[-1][1] == 1):
+            if indentation > 0 and l == 0:
                 raise IndentationError("Wrong indentation on line " + l + ". No previous cycle.")
-            if indentation > 0 and line[-1][0] + 1 < indentation:
+            if indentation > 0 and self.key[-1][0] + 1 < indentation:
                 raise IndentationError("Wrong indentation on line " + l + ". No cycle of level 1 less on line before.")
             self.key[-1][0] = indentation
 
@@ -56,13 +55,44 @@ class ParseMachine():
         line = 0
         while line < len(self.key):
             key = self.key[line]
-            for (variable, t) in key[2]:
-                self.saved[variable] = t
+            if key[2][0][0] not in self.saved:
+                for (variable, t) in key[2]:
+                    if t == []:
+                        self.saved[variable] = []
+                    else:
+                        self.saved[variable] = None
             if key[1] == 1:
                 self.parse_line(key, line)
             else:
-                if key[0] < self.key[line][0]:
-                    raise NotImplementedError()
+                if line + 1 != len(self.key) and key[0] < self.key[line + 1][0]:
+                    if len(stack) != 0 and stack[-1][0] == line:
+                        if stack[-1][1] == stack[-1][2]:
+                            line -= 1
+                            stack.pop()
+                            continue
+                        else:
+                            self.parse_line(key, line)
+                            stack[-1] = (stack[-1][0], stack[-1][1], stack[-1][2] + 1)
+                    else:
+                        repeat = 1
+                        for var in key[1]:
+                            if type(self.saved[var]) == str:
+                                try:
+                                    repeat *= int(self.saved[var])
+                                except ValueError:
+                                    raise ValueError("On line " + line + " variable " + var + " cannot be converted to integer")
+                            elif type(self.saved[var]) == list:
+                                try:
+                                    repeat *= int(self.saved[var][-1])
+                                except ValueError:
+                                    raise ValueError("On line " + line + " last element of list " + var + " cannot be converted to integer.")
+                            elif self.saved[var] is None:
+                                raise ValueError("Variable " + var + "is not in input file.")
+                            if repeat == 0:
+                                raise ValueError("Repeating line " + line + " zero times.")
+                            self.parse_line(key, line)
+                            stack.append((line, repeat, 1))
+
                 else:
                     repeat = 1
                     for var in key[1]:
@@ -75,11 +105,15 @@ class ParseMachine():
                             try:
                                 repeat *= int(self.saved[var][-1])
                             except ValueError:
+                              
                                 raise ValueError("On line " + line + " last element of list " + var + " cannot be converted to integer.")
-                        else:
-                            raise NotImplementedError()
+                        elif self.saved[var] is None:
+                            raise ValueError("Variable " + var + "is not in input file.")
                     for _ in range(repeat):
                         self.parse_line(key, line)
+                    if len(stack) > 0:
+                        line -= 1
+                        continue
             line += 1
 
         return self.saved
@@ -113,8 +147,9 @@ class ParseMachine():
             self.saved[key[2][i][0]].append(var)
 
 
-p = ParseMachine("f", """
+p = ParseMachine("""
 n, m
-n:m: a
+n: a
+  m: b
 """)
 print(p.parse(open("file.in", "r")))
