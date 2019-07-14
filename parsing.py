@@ -14,12 +14,13 @@ class ParseMachine():
         for line in key:
             if line.replace(" ", "") == "":
                 continue  # přeskočení prázdného řádku
-            elif line[0] == "|" and len(self.key) == 0:
+            elif line[0] == "|":
                 self.set_settings(line)  # vyhodnocení změny nastavení
                 applied_settings = False
                 continue
             if applied_settings is False:
                 self.apply_settings()
+                applied_settings = True
             self.key.append([0, [], None])
             (i, indentation) = self.get_indentation(line, l)
             if indentation > 0 and l == 0:
@@ -51,7 +52,7 @@ class ParseMachine():
                     raise SyntaxError(r + " is defined earlier than on line " + l + ".")
                 else:
                     defined[r] = True
-            self.key[-1][2] = [(r, self.default_type) if self.key[-1][1] == 1 else (r, [self.default_type]) for r in read]
+            self.key[-1][2] = [(r, self.default_type) if self.key[-1][1] == 1 and self.key[-1][0] == 0 else (r, [self.default_type]) for r in read]
 
             l = str(int(l) + 1)
         self.key.append([0, None])
@@ -66,12 +67,10 @@ class ParseMachine():
                 setting = self.settings_names[setting]
             elif setting not in self.settings:
                 raise ValueError("Not known setting: " + setting)
-            if len(self.settings[setting]) == 1:
-                raise SyntaxError("Setting " + setting + " was already changed.")
-            elif value not in self.settings[setting][1]:
+            if value not in self.settings[setting][1]:
                 raise ValueError("Unknown value: " + value)
             else:
-                self.settings[setting] = [value]
+                self.settings[setting] = (value, self.settings[setting][1])
     
     def apply_settings(self):
         for (setting, value) in self.settings.items():
@@ -228,11 +227,10 @@ class ParseMachine():
 
 
 p = ParseMachine("""
-|t-i
 n, m, k
 n: a
   m: b
     k: c
-  m: d
+  d
 """)
 print(p.parse(open("file.in", "r")))
