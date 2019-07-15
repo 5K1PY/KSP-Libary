@@ -134,8 +134,8 @@ class ParseMachine():
             if key[1] is None:
                 break
             if key[2][0][0] not in self.saved:  # definování promněnných, které jsou v tomto řádku poprvé
-                for (variable, t) in key[2]:
-                    if type(t) == list:
+                for (variable, t, _) in key[2]:
+                    if t == []:
                         self.saved[variable] = []
                     else:
                         self.saved[variable] = None
@@ -249,7 +249,7 @@ class ParseMachine():
 
 
 p = ParseMachine("""
-n, m, k | i, s, f
+n, m, k
 n: a
   m: b
     k: c
