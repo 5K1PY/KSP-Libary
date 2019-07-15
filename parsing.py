@@ -42,8 +42,10 @@ class ParseMachine():
                 self.key[-1][1] = 1
 
             read = line[i:]
-            read = read.replace(" ", "")
-            read = read.split(",")
+            setting = None
+            if "|" in line[i:]:
+                (read, setting) = (line[i:line.index("|", i)], line[line.index("|", i)+1:])
+            read = read.replace(" ", "").split(",")
             for r in read:
                 for character in r:
                     if not ord("a") <= ord(character) <= ord("z"):
@@ -52,8 +54,28 @@ class ParseMachine():
                     raise SyntaxError(r + " is defined earlier than on line " + l + ".")
                 else:
                     defined[r] = True
-            self.key[-1][2] = [(r, self.default_type) if self.key[-1][1] == 1 and self.key[-1][0] == 0 else (r, [self.default_type]) for r in read]
+            self.key[-1][2] = [[r, None, self.default_type] if self.key[-1][1] == 1 and self.key[-1][0] == 0 else [r, [], self.default_type] for r in read]
 
+            if setting is not None:
+                setting = setting.replace(" ","").split(",")
+                i = 0
+                if len(setting) < len(self.key[-1][2]):
+                    raise ValueError("Not enough settings on line " + l + ".")
+                if len(setting) > len(self.key[-1][2]):
+                    raise ValueError("Too many settings on line " + l + ".")
+                for s in setting:
+                    if s == "s":
+                        read_type = str
+                    elif s == "i":
+                        read_type = int
+                    elif s == "f":
+                        read_type = float
+                    else:
+                        raise ValueError("Unknown value on line " + l + ": " + s)
+                    self.key[-1][2][i][2] = read_type
+                    i += 1
+                
+    
             l = str(int(l) + 1)
         self.key.append([0, None])
 
@@ -206,10 +228,10 @@ class ParseMachine():
                 if i == len(key[2]):
                     raise ValueError("More variables in file than in key on line " + line + ".")
                 try:
-                    if type(key[2][i][1]) != list:
-                        self.saved[key[2][i][0]] = key[2][i][1](var)
+                    if key[2][i][1] != []:
+                        self.saved[key[2][i][0]] = key[2][i][2](var)
                     else:
-                        self.saved[key[2][i][0]].append(key[2][i][1][0](var))
+                        self.saved[key[2][i][0]].append(key[2][i][2](var))
                 except ValueError:
                     raise ValueError(var + " cannot be converted.")
                 var = char
@@ -218,16 +240,16 @@ class ParseMachine():
                 var += char
             char = self.file.read(1)
         try:
-            if type(key[2][i][1]) != list:
-                self.saved[key[2][i][0]] = key[2][i][1](var)
+            if key[2][i][1] != []:
+                self.saved[key[2][i][0]] = key[2][i][2](var)
             else:
-                self.saved[key[2][i][0]].append(key[2][i][1][0](var))
+                self.saved[key[2][i][0]].append(key[2][i][2](var))
         except ValueError:
             raise ValueError(var + " cannot be converted.")
 
 
 p = ParseMachine("""
-n, m, k
+n, m, k | i, s, f
 n: a
   m: b
     k: c
