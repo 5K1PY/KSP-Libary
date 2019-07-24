@@ -3,7 +3,7 @@ class ParseMachine():
         self.key = []
         key = key.split("\n")
         self.settings = {  # nastavení
-            "indentation": ("s2", ("s2", "s4", "s8", "t")),  # odsazení: s2 - 2 mezery, s4 - 4 mezery, s8 - osm mezer, t - tabulátor 
+            "indentation": ("s4", ("s2", "s4", "s8", "t")),  # odsazení: s2 - 2 mezery, s4 - 4 mezery, s8 - osm mezer, t - tabulátor 
             "type": ("s", ("s", "i", "f"))}  # typů vstupu: s - string, i - int, f - float
         self.settings_names = {}
         for setting in self.settings:
@@ -14,14 +14,13 @@ class ParseMachine():
         for line in key:
             if line.replace(" ", "") == "":
                 continue  # přeskočení prázdného řádku
-            elif line[0] == "|":
-                self.set_settings(line)  # vyhodnocení změny nastavení
-                applied_settings = False
-                continue
-            if applied_settings is False:
+            
+            if applied_settings is False:  # vyhodnocení změny nastavení
                 self.apply_settings()
                 applied_settings = True
+            
             self.key.append([0, [], None])
+            
             (i, indentation) = self.get_indentation(line, l)
             if indentation > 0 and l == 0:
                 raise IndentationError("Wrong indentation on line " + l + ". No previous cycle.")
@@ -29,6 +28,12 @@ class ParseMachine():
                 raise IndentationError("Wrong indentation on line " + l + ". No cycle of level 1 less on line before.")
             self.key[-1][0] = indentation
 
+            if line[i] == "|":  # změna nastavení
+                self.set_settings(line)
+                self.key.pop()
+                applied_settings = False
+                continue
+            
             while ":" in line[i:]:
                 repeat = line[i:line.index(":", i)]
                 for r in repeat:
@@ -251,8 +256,8 @@ class ParseMachine():
 p = ParseMachine("""
 n, m, k
 n: a
-  m: b
-    k: c
-  d
+    m: b
+        k: c
+    d
 """)
 print(p.parse(open("file.in", "r")))
