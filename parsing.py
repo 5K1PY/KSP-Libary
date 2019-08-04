@@ -1,4 +1,3 @@
-
 class ParseMachine():
     def __init__(self, key):
         """Creates instructions to interpret key"""
@@ -267,4 +266,4 @@ p = ParseMachine("""
 n
 n: a
 """)
-print(p.parse(open("file.in", "r")))
+print(p.parse(open("DataFiles/file.in", "r")))
