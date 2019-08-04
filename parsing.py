@@ -249,7 +249,6 @@ class ParseMachine():
             else:
                 var += char
             char = self.file.read(1)
-        i += 1
         if i >= len(key[2]):
             raise ValueError("More variables in file than in key on line " + line + ".")
         try:
