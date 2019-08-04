@@ -51,11 +51,12 @@ class ksp_instance():
 
 class ParseMachine():
     def __init__(self, key):
+        """Creates instructions to interpret key"""
         self.key = []
         key = key.split("\n")
-        self.settings = {  # nastavení
-            "indentation": ("s4", ("s2", "s4", "s8", "t")),  # odsazení: s2 - 2 mezery, s4 - 4 mezery, s8 - osm mezer, t - tabulátor 
-            "type": ("s", ("s", "i", "f"))}  # typů vstupu: s - string, i - int, f - float
+        self.settings = {  # settings
+            "indentation": ("s4", ("s2", "s4", "s8", "t")),  # indentation: s2 - 2 spaces, s4 - 4 spaces, s8 - osm spaces, t - tabs 
+            "type": ("s", ("s", "i", "f"))}  # type of input: s - string, i - int, f - float
         self.settings_names = {}
         for setting in self.settings:
             self.settings_names[setting[0]] = setting
@@ -64,28 +65,28 @@ class ParseMachine():
         applied_settings = False
         for line in key:
             if line.replace(" ", "") == "":
-                continue  # přeskočení prázdného řádku
+                continue  # skip empty line
             
-            if applied_settings is False:  # vyhodnocení změny nastavení
+            if applied_settings is False:  # appling settings needed before indentation
                 self.apply_settings()
                 applied_settings = True
             
             self.key.append([0, [], None])
             
             (i, indentation) = self.get_indentation(line, l)
-            if indentation > 0 and l == 0:
+            if indentation > 0 and l == 0:  # getting indentation
                 raise IndentationError("Wrong indentation on line " + l + ". No previous cycle.")
             if indentation > 0 and self.key[-2][0] + 1 < indentation:
                 raise IndentationError("Wrong indentation on line " + l + ". No cycle of level 1 less on line before.")
             self.key[-1][0] = indentation
 
-            if line[i] == "|":  # změna nastavení
+            if line[i] == "|":  # changing settings
                 self.set_settings(line)
                 self.key.pop()
                 applied_settings = False
                 continue
             
-            while ":" in line[i:]:
+            while ":" in line[i:]:  # getting repeat
                 repeat = line[i:line.index(":", i)]
                 for r in repeat:
                     if not ord("a") <= ord(r) <= ord("z"):
@@ -99,17 +100,18 @@ class ParseMachine():
 
             read = line[i:]
             setting = None
-            if "|" in line[i:]:
+            if "|" in line[i:]:  # splitting setting and reading parts
                 (read, setting) = (line[i:line.index("|", i)], line[line.index("|", i)+1:])
             read = read.replace(" ", "").split(",")
-            for r in read:
-                for character in r:
+
+            for variable in read:
+                for character in variable:  # finding user errors
                     if not ord("a") <= ord(character) <= ord("z"):
                         raise SyntaxError("Cannot repeat sequence " + repeat + " on line " + l + ".")
-                if r in defined:
+                if variable in defined:
                     raise SyntaxError(r + " is defined earlier than on line " + l + ".")
                 else:
-                    defined[r] = True
+                    defined[variable] = True
             self.key[-1][2] = [[r, None, self.default_type] if self.key[-1][1] == 1 and self.key[-1][0] == 0 else [r, [], self.default_type] for r in read]
 
             if setting is not None:
@@ -136,6 +138,7 @@ class ParseMachine():
         self.key.append([0, None])
 
     def set_settings(self, line):
+        """Updates all settings"""
         line = line.split("|")
         for part in line:
             if part.replace(" ", "") == "":
@@ -151,9 +154,10 @@ class ParseMachine():
                 self.settings[setting] = (value, self.settings[setting][1])
     
     def apply_settings(self):
+        """Apllies all settings"""
         for (setting, value) in self.settings.items():
             value = value[0]
-            if setting == "type":  # aktualizace změn
+            if setting == "type":  # aktualization of settings
                 if value == "s":
                     self.default_type = str
                 elif value == "i":
@@ -170,7 +174,8 @@ class ParseMachine():
                 elif value == "t":
                     self.indentation = "\t"
 
-    def get_indentation(self, line, l):
+    def get_indentation(self, line, l="unknown"):
+        """Gets indentation for line. l number line parametr"""
         i = 0
         indentation_count = 0
         while line[i] == self.indentation[0]:
@@ -181,6 +186,7 @@ class ParseMachine():
         return (i, indentation_count)
 
     def parse(self, file):
+        """Parses key by its instructions."""
         self.saved = {}
         self.file = file
         stack = []
@@ -189,13 +195,13 @@ class ParseMachine():
             key = self.key[line]
             if key[1] is None:
                 break
-            if key[2][0][0] not in self.saved:  # definování promněnných, které jsou v tomto řádku poprvé
+            if key[2][0][0] not in self.saved:  # defining vyriables
                 for (variable, t, _) in key[2]:
                     if t == []:
                         self.saved[variable] = []
                     else:
                         self.saved[variable] = None
-            if key[1] == 1:  # opakování řádku 1×
+            if key[1] == 1:  # line without repeating
                 self.parse_line(key, line)
                 if len(stack) > 0:
                     if key[0] == self.key[line+1][0]: 
@@ -205,16 +211,16 @@ class ParseMachine():
                         line = stack[-1][0]
                         continue
             else:  # opakování řádku vícekrát
-                if line + 1 != len(self.key) and key[0] < self.key[line + 1][0]:  # zanoření
+                if line + 1 != len(self.key) and key[0] < self.key[line + 1][0]:  # cycle with cylce in itself
                     if len(stack) != 0 and stack[-1][0] == line:
-                        if stack[-1][1] == stack[-1][2]:  # vracení zpátky
+                        if stack[-1][1] == stack[-1][2]:  # returning from cycle
                             line = stack[-1][3]
                             stack.pop()
                             continue
-                        else:  # další iterace
+                        else:  # next iteration
                             self.parse_line(key, line)
                             stack[-1][2] += 1
-                    else:  # založení nového opakování
+                    else:  # creating new repetition
                         repeat = 1
                         for var in key[1]:
                             if type(self.saved[var]) != list:
@@ -241,9 +247,9 @@ class ParseMachine():
                                 stack.append([line, repeat, 1, line-1])
 
 
-                else:  # bez zanoření
+                else:  # cycle without cycle in itself
                     repeat = 1
-                    for var in key[1]:  # určení počtu opakování
+                    for var in key[1]:  # determaning number of repeats
                         if type(self.saved[var]) != list:
                             try:
                                 repeat *= int(self.saved[var])
@@ -256,13 +262,13 @@ class ParseMachine():
                                 raise TypeError("On line " + line + " last element of list " + var + " cannot be converted to integer.")
                         elif self.saved[var] is None:
                             raise ValueError("Variable " + var + "is not in input file.")
-                    for _ in range(repeat):  # provedení
+                    for _ in range(repeat):  # execution of one level cycle
                         self.parse_line(key, line)
-                    if len(stack) > 0:  # jití dál
+                    if len(stack) > 0:  # going next same level cycle
                         if key[0] == self.key[line+1][0]: 
                             line += 1
                             continue
-                        else:  # vracení zpátky
+                        else:  # returning from cycle
                             line = stack[-1][0]
                             continue
             line += 1
@@ -270,20 +276,19 @@ class ParseMachine():
         return self.saved
 
     def parse_line(self, key, line):
+        """Reads line."""
         char = self.file.read(1)
-        while char == " ":
-            char = self.file.read(1)
         i = 0
         var = ""
         while char != "\n" and char != "":
             if char == " " and len(key[2]) != 1:
                 while char == " ":
-                    char = self.file.read(1)
+                    char = self.file.read(1)  # finds next non-space character
                 if char == "\n" or char == "":
-                    continue
-                if i == len(key[2]):
+                    break
+                if i >= len(key[2]):
                     raise ValueError("More variables in file than in key on line " + line + ".")
-                try:
+                try:  # apllies types on found varibles
                     if key[2][i][1] != []:
                         self.saved[key[2][i][0]] = key[2][i][2](var)
                     else:
@@ -295,6 +300,9 @@ class ParseMachine():
             else:
                 var += char
             char = self.file.read(1)
+        i += 1
+        if i >= len(key[2]):
+            raise ValueError("More variables in file than in key on line " + line + ".")
         try:
             if key[2][i][1] != []:
                 self.saved[key[2][i][0]] = key[2][i][2](var)
@@ -302,3 +310,4 @@ class ParseMachine():
                 self.saved[key[2][i][0]].append(key[2][i][2](var))
         except ValueError:
             raise ValueError(var + " cannot be converted.")
+        return None
