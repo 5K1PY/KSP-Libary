@@ -1,4 +1,4 @@
-class Counter():
+class Calculator():
     def __init__(self, expression, l="unknown"):
         """Does pre-calculations for computing expression with variables. Line parameter l for errors."""
         self.l = l
@@ -6,7 +6,6 @@ class Counter():
         self.calculations = []
         operators = ["+", "-", "*", "/", "**"]
         operator_priorities = [1, 1, 2, 2, 3]
-        max_priority = max(operator_priorities) + 1
         self.variables = {}
         bracket_count = 0
         part = ""
@@ -129,3 +128,7 @@ class Counter():
             return number1 / number2
         elif operator == "**":
             return number1 ** number2
+
+class BlankCalculator():
+    def calculate(self, variables):
+        return 1

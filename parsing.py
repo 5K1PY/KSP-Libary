@@ -35,17 +35,14 @@ class ParseMachine():
                 applied_settings = False
                 continue
             
-            while ":" in line[i:]:  # getting repeat
-                repeat = line[i:line.index(":", i)]
-                for r in repeat:
-                    if not ord("a") <= ord(r) <= ord("z"):
-                        raise SyntaxError("Invalid character for variable " + repeat + " on line " + l + ".")
+            if line.count(":") == 0:  # getting repeat
+                self.key[-1][1] = BlankCalculator()
+            elif line.count(":") == 1:
+                repeat = line[i:line.index(":")]
                 i += len(repeat) + 1
-                if repeat not in defined:
-                    raise SyntaxError(repeat + " is not defined before line " + l + ".")
-                self.key[-1][1].append(repeat)
-            if len(self.key[-1][1]) == 0:
-                self.key[-1][1] = 1
+                self.key[-1][1] = Calculator(repeat, l)
+            else:
+                raise SyntaxError(f"More than one : on line {l}.")
 
             read = line[i:]
             setting = None
@@ -58,10 +55,10 @@ class ParseMachine():
                     if not ord("a") <= ord(character) <= ord("z"):
                         raise SyntaxError("Cannot repeat sequence " + repeat + " on line " + l + ".")
                 if variable in defined:
-                    raise SyntaxError(r + " is defined earlier than on line " + l + ".")
+                    raise SyntaxError(variable + " is defined earlier than on line " + l + ".")
                 else:
                     defined[variable] = True
-            self.key[-1][2] = [[r, None, self.default_type] if self.key[-1][1] == 1 and self.key[-1][0] == 0 else [r, [], self.default_type] for r in read]
+            self.key[-1][2] = [[r, None, self.default_type] if isinstance(self.key[-1][1], BlankCalculator) and self.key[-1][0] == 0 else [r, [], self.default_type] for r in read]
 
             if setting is not None:
                 setting = setting.replace(" ","").split(",")
@@ -144,82 +141,53 @@ class ParseMachine():
             key = self.key[line]
             if key[1] is None:
                 break
-            if key[2][0][0] not in self.saved:  # defining vyriables
+            
+            repeat = key[1].calculate(self.saved)  # determaning number of repeats
+            if repeat == 0:
+                raise ValueError(f"Repeating line {line} zero times.")
+            elif repeat < 0:
+                raise ValueError(f"Repeating line {line} less than zero times.")
+            elif repeat % 1 != 0:
+                raise ValueError(f"Repeating line {line} not whole number of times.")
+            
+            if key[2][0][0] not in self.saved:  # defining variables
                 for (variable, t, _) in key[2]:
                     if t == []:
                         self.saved[variable] = []
                     else:
                         self.saved[variable] = None
-            if key[1] == 1:  # line without repeating
-                self.parse_line(key, line)
-                if len(stack) > 0:
+
+            
+            if line + 1 != len(self.key) and key[0] < self.key[line + 1][0]:  # cycle with cylce in itself
+                if len(stack) != 0 and stack[-1][0] == line:
+                    if stack[-1][1] == stack[-1][2]:  # returning from cycle
+                        line = stack[-1][3]
+                        stack.pop()
+                        continue
+                    else:  # next iteration
+                        self.parse_line(key, line)
+                        stack[-1][2] += 1
+                else:  # creating new repetition
+                    self.parse_line(key, line)
+                    l = line + 1
+                    while key[0] < self.key[l][0]:
+                        l += 1
+                    if line == 0 or self.key[l][0] >= self.key[line-1][0]:
+                        stack.append([line, repeat, 1, l])
+                    else:
+                        stack.append([line, repeat, 1, line-1])
+
+
+            else:  # cycle without cycle in itself
+                for _ in range(repeat):  # execution of one level cycle
+                    self.parse_line(key, line)
+                if len(stack) > 0:  # going next same level cycle
                     if key[0] == self.key[line+1][0]: 
                         line += 1
                         continue
-                    else:
+                    else:  # returning from cycle
                         line = stack[-1][0]
                         continue
-            else:  # opakování řádku vícekrát
-                if line + 1 != len(self.key) and key[0] < self.key[line + 1][0]:  # cycle with cylce in itself
-                    if len(stack) != 0 and stack[-1][0] == line:
-                        if stack[-1][1] == stack[-1][2]:  # returning from cycle
-                            line = stack[-1][3]
-                            stack.pop()
-                            continue
-                        else:  # next iteration
-                            self.parse_line(key, line)
-                            stack[-1][2] += 1
-                    else:  # creating new repetition
-                        repeat = 1
-                        for var in key[1]:
-                            if type(self.saved[var]) != list:
-                                try:
-                                    repeat *= int(self.saved[var])
-                                except ValueError:
-                                    raise TypeError("On line " + line + " variable " + var + " cannot be converted to integer")
-                            elif type(self.saved[var]) == list:
-                                try:
-                                    repeat *= int(self.saved[var][-1])
-                                except ValueError:
-                                    raise TypeError("On line " + line + " last element of list " + var + " cannot be converted to integer.")
-                            elif self.saved[var] is None:
-                                raise ValueError("Variable " + var + "is not in input file.")
-                            if repeat == 0:
-                                raise ValueError("Repeating line " + line + " zero times.")
-                            self.parse_line(key, line)
-                            l = line + 1
-                            while key[0] < self.key[l][0]:
-                                l += 1
-                            if line == 0 or self.key[l][0] >= self.key[line-1][0]:
-                                stack.append([line, repeat, 1, l])
-                            else:
-                                stack.append([line, repeat, 1, line-1])
-
-
-                else:  # cycle without cycle in itself
-                    repeat = 1
-                    for var in key[1]:  # determaning number of repeats
-                        if type(self.saved[var]) != list:
-                            try:
-                                repeat *= int(self.saved[var])
-                            except ValueError:
-                                raise TypeError("On line " + line + " variable " + var + " cannot be converted to integer")
-                        elif type(self.saved[var]) == list:
-                            try:
-                                repeat *= int(self.saved[var][-1])
-                            except ValueError:
-                                raise TypeError("On line " + line + " last element of list " + var + " cannot be converted to integer.")
-                        elif self.saved[var] is None:
-                            raise ValueError("Variable " + var + "is not in input file.")
-                    for _ in range(repeat):  # execution of one level cycle
-                        self.parse_line(key, line)
-                    if len(stack) > 0:  # going next same level cycle
-                        if key[0] == self.key[line+1][0]: 
-                            line += 1
-                            continue
-                        else:  # returning from cycle
-                            line = stack[-1][0]
-                            continue
             line += 1
 
         return self.saved
