@@ -1,4 +1,4 @@
-file_names = ["Reading.py", "Parsing.py"]
+file_names = ["Reading.py", "Parsing.py", "Calculator.py"]
 result_file = "ksp.py"
 result = open(result_file, "w")
 for file_name in file_names:
