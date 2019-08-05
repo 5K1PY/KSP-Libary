@@ -259,10 +259,3 @@ class ParseMachine():
         except ValueError:
             raise ValueError(var + " cannot be converted.")
         return None
-
-p = ParseMachine("""
-|t-i
-n
-n: a
-""")
-print(p.parse(open("DataFiles/file.in", "r")))

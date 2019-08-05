@@ -1,7 +1,7 @@
 import time
 
 
-class ksp_instance():
+class file_read_instance():
     def __init__(self, file_name):
         self.start_time = time.time()
         self.last_time = self.start_time
@@ -48,7 +48,6 @@ class ksp_instance():
         """Returns time from start."""
         return time.time() - self.last_time
 
-
 class ParseMachine():
     def __init__(self, key):
         """Creates instructions to interpret key"""
@@ -90,7 +89,7 @@ class ParseMachine():
                 repeat = line[i:line.index(":", i)]
                 for r in repeat:
                     if not ord("a") <= ord(r) <= ord("z"):
-                        raise SyntaxError("Cannot repeat sequence " + repeat + " on line " + l + ".")
+                        raise SyntaxError("Invalid character for variable " + repeat + " on line " + l + ".")
                 i += len(repeat) + 1
                 if repeat not in defined:
                     raise SyntaxError(repeat + " is not defined before line " + l + ".")
@@ -300,7 +299,6 @@ class ParseMachine():
             else:
                 var += char
             char = self.file.read(1)
-        i += 1
         if i >= len(key[2]):
             raise ValueError("More variables in file than in key on line " + line + ".")
         try:
@@ -311,3 +309,4 @@ class ParseMachine():
         except ValueError:
             raise ValueError(var + " cannot be converted.")
         return None
+
