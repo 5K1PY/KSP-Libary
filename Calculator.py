@@ -1,6 +1,6 @@
 class Counter():
     def __init__(self, expression, l="unknown"):
-        """Does pre-calculations for computing expression with variables."""
+        """Does pre-calculations for computing expression with variables. Line parameter l for errors."""
         self.l = l
         self.priorities = []
         self.calculations = []
@@ -14,7 +14,7 @@ class Counter():
         expression = "(" + expression.replace(" ", "") + "):"
         positivity_multiplier = 1
         for char in expression:
-            if ord("0") <= ord(char) <= ord("9"):
+            if ord("0") <= ord(char) <= ord("9"):  # analyzing new character
                 (last_part_type, part_type) = (part_type, "number")
             elif char == ":":
                 (last_part_type, part_type) = (part_type, "end")
@@ -27,7 +27,7 @@ class Counter():
             
             if last_part_type == part_type and part_type != "bracket":
                 part += char
-            else:
+            else:  # saving last part
                 if last_part_type == "number":
                     if char == "(" or part_type == "variable":
                         raise SyntaxError(f"Invalid expression on line {self.l}.")
@@ -69,10 +69,12 @@ class Counter():
             raise SyntaxError(f"Invalid bracketing on line {self.l}")
 
     def get_variables(self):
+        """Returns variables needed for expression."""
         return self.variables
     
     def calculate(self, variables):
-        for i in range(len(self.calculations)):
+        """Calculate value of expression for variables."""
+        for i in range(len(self.calculations)):  # replaces variables with their values
             if self.calculations[i][1] == "variable":
                 if self.calculations[i][0] not in variables:
                     raise ValueError(f"Variable {self.calculations[i][0]} not defined.")
@@ -88,7 +90,7 @@ class Counter():
                         raise TypeError(f"On line {self.l} variable {self.calculations[i][0]} cannot be converted to integer")
         progress = []
         last_operator = 0
-        for c in self.calculations:
+        for c in self.calculations:  # calculates expression
             if c[1] == "number":
                 progress.append(c[0])
             elif c[1] == "operator":
@@ -113,6 +115,7 @@ class Counter():
         return progress[0]
 
     def compute(self, commands):
+        """Computes value of operation."""
         (number1, operator, number2) = commands
         if operator == "+":
             return number1 + number2
