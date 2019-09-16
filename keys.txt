@@ -2,7 +2,7 @@ n
 n: a
 
 n, m
-n:m: a, b
+n*m: a, b
 
 n
 n: a
@@ -18,3 +18,9 @@ n: a
   a: b
     c, d
       c: e
+
+n
+n: a*
+
+n
+n: a>(-1)
