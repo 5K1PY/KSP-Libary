@@ -1,3 +1,5 @@
+from calculation import *
+
 class ParseMachine():
     def __init__(self, key):
         """Creates instructions to interpret key"""
@@ -131,10 +133,11 @@ class ParseMachine():
             indentation_count += 1
         return (i, indentation_count)
 
-    def parse(self, file):
+    def parse(self, text):
         """Parses key by its instructions."""
         self.saved = {}
-        self.file = file
+        self.text = text
+        self.text_index = 0
         stack = []
         line = 0
         while line < len(self.key):
@@ -194,13 +197,13 @@ class ParseMachine():
 
     def parse_line(self, key, line):
         """Reads line."""
-        char = self.file.read(1)
+        char = self.text_read()
         i = 0
         var = ""
         while char != "\n" and char != "":
             if char == " " and len(key[2]) != 1:
                 while char == " ":
-                    char = self.file.read(1)  # finds next non-space character
+                    char = self.text_read()  # finds next non-space character
                 if char == "\n" or char == "":
                     break
                 if i >= len(key[2]):
@@ -216,7 +219,7 @@ class ParseMachine():
                 i += 1
             else:
                 var += char
-            char = self.file.read(1)
+            char = self.text_read()
         if i >= len(key[2]):
             raise ValueError("More variables in file than in key on line " + line + ".")
         try:
@@ -227,3 +230,10 @@ class ParseMachine():
         except ValueError:
             raise ValueError(var + " cannot be converted.")
         return None
+
+    def text_read(self):
+        """Reads next character in text."""
+        if self.text_index >= len(self.text):
+            return ""
+        self.text_index += 1
+        return self.text[self.text_index-1]

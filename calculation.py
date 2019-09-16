@@ -3,7 +3,7 @@ class Calculator():
         """Does pre-calculations for computing expression with variables. Line parameter l for errors."""
         self.l = l
         self.priorities = []
-        self.calculations = []
+        self.precalculations = []
         operators = ["+", "-", "*", "/", "**"]
         operator_priorities = [1, 1, 2, 2, 3]
         self.variables = {}
@@ -30,13 +30,13 @@ class Calculator():
                 if last_part_type == "number":
                     if char == "(" or part_type == "variable":
                         raise SyntaxError(f"Invalid expression on line {self.l}.")
-                    self.calculations.append((int(part)*positivity_multiplier, last_part_type))
+                    self.precalculations.append((int(part)*positivity_multiplier, last_part_type))
                     positivity_multiplier = 1
                 elif last_part_type == "variable":
                     if char == "(" or part_type == "number" or positivity_multiplier == -1:
                         raise SyntaxError(f"Invalid expression on line {self.l}.")
                     self.variables[part] = None
-                    self.calculations.append((part, last_part_type))
+                    self.precalculations.append((part, last_part_type))
                 elif last_part_type == "operator":
                     if positivity_multiplier == -1:
                         if part != "-":
@@ -47,7 +47,7 @@ class Calculator():
                         if part not in operators:
                             raise ValueError(f"Unknown operator {part} on line {self.l}.")
                         self.priorities.append(operator_priorities[operators.index(part)])
-                        self.calculations.append((part, last_part_type))
+                        self.precalculations.append((part, last_part_type))
                 elif last_part_type == "bracket":
                     if part == "(":
                         if char == "-":
@@ -62,7 +62,7 @@ class Calculator():
                         bracket_count -= 1
                         if bracket_count < 0:
                             raise SyntaxError(f"Invalid bracketing on line {self.l}")
-                    self.calculations.append((part, last_part_type))
+                    self.precalculations.append((part, last_part_type))
                 part = char
         if bracket_count > 0:
             raise SyntaxError(f"Invalid bracketing on line {self.l}")
@@ -73,23 +73,24 @@ class Calculator():
     
     def calculate(self, variables):
         """Calculate value of expression for variables."""
-        for i in range(len(self.calculations)):  # replaces variables with their values
-            if self.calculations[i][1] == "variable":
-                if self.calculations[i][0] not in variables:
-                    raise ValueError(f"Variable {self.calculations[i][0]} not defined.")
-                if type(variables[self.calculations[i][0]]) == list:
+        calculations = self.precalculations[:]
+        for i in range(len(calculations)):  # replaces variables with their values
+            if calculations[i][1] == "variable":
+                if calculations[i][0] not in variables:
+                    raise ValueError(f"Variable {calculations[i][0]} not defined.")
+                if type(variables[calculations[i][0]]) == list:
                     try:
-                        self.calculations[i] = (int(variables[self.calculations[i][0]][-1]), "number")
+                        calculations[i] = (int(variables[calculations[i][0]][-1]), "number")
                     except ValueError:
-                        raise TypeError(f"On line {self.l} last element of list {self.calculations[i][0]} cannot be converted to integer.")
+                        raise TypeError(f"On line {self.l} last element of list {calculations[i][0]} cannot be converted to integer.")
                 else:
                     try:
-                        self.calculations[i] = (int(variables[self.calculations[i][0]]), "number")
+                        calculations[i] = (int(variables[calculations[i][0]]), "number")
                     except ValueError:
-                        raise TypeError(f"On line {self.l} variable {self.calculations[i][0]} cannot be converted to integer")
+                        raise TypeError(f"On line {self.l} variable {calculations[i][0]} cannot be converted to integer")
         progress = []
         last_operator = 0
-        for c in self.calculations:  # calculates expression
+        for c in calculations:  # calculates expression
             if c[1] == "number":
                 progress.append(c[0])
             elif c[1] == "operator":
