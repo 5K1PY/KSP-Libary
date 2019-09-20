@@ -71,14 +71,19 @@ class Calculator():
         """Returns variables needed for expression."""
         return self.variables
     
-    def calculate(self, variables):
+    def calculate(self, variables, list_watch):
         """Calculate value of expression for variables."""
         calculations = self.precalculations[:]
         for i in range(len(calculations)):  # replaces variables with their values
             if calculations[i][1] == "variable":
                 if calculations[i][0] not in variables:
                     raise ValueError(f"Variable {calculations[i][0]} not defined.")
-                if type(variables[calculations[i][0]]) == list:
+                if calculations[i][0] in list_watch:    
+                    try:
+                        calculations[i] = (int(list_watch[calculations[i][0]][1][-1][1][-1]), "number")
+                    except ValueError:
+                        raise TypeError(f"On line {self.l} last element of lists {calculations[i][0]} cannot be converted to integer.")
+                elif type(variables[calculations[i][0]]) == list:
                     try:
                         calculations[i] = (int(variables[calculations[i][0]][-1]), "number")
                     except ValueError:
@@ -131,5 +136,5 @@ class Calculator():
             return number1 ** number2
 
 class BlankCalculator():
-    def calculate(self, variables):
+    def calculate(self, variables, list_watch):
         return 1
