@@ -105,7 +105,7 @@ class ParseMachine():
         """Apllies all settings"""
         for (setting, value) in self.settings.items():
             value = value[0]
-            if setting == "type":  # aktualization of settings
+            if setting == "type":  # actualization of settings
                 if value == "s":
                     self.default_type = str
                 elif value == "i":
@@ -162,7 +162,7 @@ class ParseMachine():
                     elif t == 1:
                         self.saved[variable] = []
                     else:
-                        self.saved[variable] = []
+                        self.saved[variable] = []  # defining a recursive list
                         self.list_watch[variable] = [t, [[0, self.saved[variable]]]]
                         for _ in range(t-1):
                             self.list_watch[variable][1][-1][1].append([])
@@ -177,7 +177,7 @@ class ParseMachine():
                         continue
                     else:  # next iteration
                         self.parse_line(key, line)
-                        for var in self.list_watch.keys():
+                        for var in self.list_watch.keys():  # adding new branch of recursive lists
                             if self.list_watch[var][0] - 1 > stack_depth:
                                 self.list_watch[var][1][stack_depth][1].append([])
                                 self.list_watch[var][1][stack_depth + 1][1] = self.list_watch[var][1][stack_depth][1][-1]
@@ -185,7 +185,7 @@ class ParseMachine():
                         stack_depth += 1
                 else:  # creating new repetition
                     self.parse_line(key, line)
-                    for var in self.list_watch.keys():
+                    for var in self.list_watch.keys():  # expanding new branch of recursive lists
                         if self.list_watch[var][0] - 1 > stack_depth:
                             self.list_watch[var][1][stack_depth][1].append([])
                             self.list_watch[var][1][stack_depth + 1][1] = self.list_watch[var][1][stack_depth][1][-1]
@@ -246,7 +246,7 @@ class ParseMachine():
             char = self.text_read()
         if i >= len(key[2]):
             raise ValueError("More variables in file than in key on line " + line + ".")
-        try:
+        try:  # apllies types on found varibles
             if key[2][i][1] == 0:
                 self.saved[key[2][i][0]] = key[2][i][2](var)
             elif key[2][i][1] == 1:
