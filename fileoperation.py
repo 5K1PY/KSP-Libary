@@ -25,10 +25,10 @@ class file_operator():
                 return self.streams.index(stream_mark, key=lambda x: x.name)
             else:
                 raise ValueError("Unknown stream.")
-        elif stream_mark == -1:
-            return -1
+        elif type(stream_mark) == int:
+            return stream_mark
         else:
-            raise ValueError("Stream_mark should be name of stream.")
+            raise ValueError("Stream_mark should be index or name of stream.")
 
     def read(self, stream_mark=-1, length="all"):
         """Reads a file form stream."""
@@ -46,7 +46,7 @@ class file_operator():
         """Writes content into a stream file."""
         i = self.check_stream(stream_mark)
         stream = self.streams[i]
-        self.machine.parse(stream.write(content))
+        stream.write(content)
 
     def close(self, stream_mark=-1):
         """Closes a stream."""
