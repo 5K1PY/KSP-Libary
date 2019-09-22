@@ -60,7 +60,7 @@ class ParseMachine():
                     raise SyntaxError(variable + " is defined earlier than on line " + l + ".")
                 else:
                     defined[variable] = True
-            self.key[-1][2] = [[r, None, self.default_type] if isinstance(self.key[-1][1], BlankCalculator) and self.key[-1][0] == 0 else [r, [], self.default_type] for r in read]
+            self.key[-1][2] = [[r, 0, self.default_type] if isinstance(self.key[-1][1], BlankCalculator) and self.key[-1][0] == 0 else [r, 1 + indentation, self.default_type] for r in read]
 
             if setting is not None:
                 setting = setting.replace(" ","").split(",")
@@ -105,7 +105,7 @@ class ParseMachine():
         """Apllies all settings"""
         for (setting, value) in self.settings.items():
             value = value[0]
-            if setting == "type":  # aktualization of settings
+            if setting == "type":  # actualization of settings
                 if value == "s":
                     self.default_type = str
                 elif value == "i":
@@ -138,14 +138,16 @@ class ParseMachine():
         self.saved = {}
         self.text = text
         self.text_index = 0
+        self.list_watch = {}
         stack = []
         line = 0
+        stack_depth = 0
         while line < len(self.key):
             key = self.key[line]
             if key[1] is None:
                 break
             
-            repeat = key[1].calculate(self.saved)  # determaning number of repeats
+            repeat = key[1].calculate(self.saved, self.list_watch)  # determaning number of repeats
             if repeat == 0:
                 raise ValueError(f"Repeating line {line} zero times.")
             elif repeat < 0:
@@ -155,33 +157,51 @@ class ParseMachine():
             
             if key[2][0][0] not in self.saved:  # defining variables
                 for (variable, t, _) in key[2]:
-                    if t == []:
+                    if t == 0:
+                        self.saved[variable] = None
+                    elif t == 1:
                         self.saved[variable] = []
                     else:
-                        self.saved[variable] = None
-
+                        self.saved[variable] = []  # defining a recursive list
+                        self.list_watch[variable] = [t, [[0, self.saved[variable]]]]
+                        for _ in range(t-1):
+                            self.list_watch[variable][1][-1][1].append([])
+                            self.list_watch[variable][1].append([0, self.list_watch[variable][1][-1][1][0]])
             
             if line + 1 != len(self.key) and key[0] < self.key[line + 1][0]:  # cycle with cylce in itself
                 if len(stack) != 0 and stack[-1][0] == line:
                     if stack[-1][1] == stack[-1][2]:  # returning from cycle
                         line = stack[-1][3]
                         stack.pop()
+                        stack_depth -= 1
                         continue
                     else:  # next iteration
                         self.parse_line(key, line)
+                        for var in self.list_watch.keys():  # adding new branch of recursive lists
+                            if self.list_watch[var][0] - 1 > stack_depth:
+                                self.list_watch[var][1][stack_depth][1].append([])
+                                self.list_watch[var][1][stack_depth + 1][1] = self.list_watch[var][1][stack_depth][1][-1]
                         stack[-1][2] += 1
+                        stack_depth += 1
                 else:  # creating new repetition
                     self.parse_line(key, line)
-                    l = line + 1
-                    while key[0] < self.key[l][0]:
-                        l += 1
-                    if line == 0 or self.key[l][0] >= self.key[line-1][0]:
-                        stack.append([line, repeat, 1, l])
+                    for var in self.list_watch.keys():  # expanding new branch of recursive lists
+                        if self.list_watch[var][0] - 1 > stack_depth:
+                            self.list_watch[var][1][stack_depth][1].append([])
+                            self.list_watch[var][1][stack_depth + 1][1] = self.list_watch[var][1][stack_depth][1][-1]
+                    (lowerl, upperl) = (line + 1, line - 1)
+                    while upperl > 0 and key[0] <= self.key[upperl][0]:
+                        upperl -= 1
+                    while key[0] < self.key[lowerl][0]:
+                        lowerl += 1
+                    if self.key[line][0] == self.key[lowerl][0]:
+                        stack.append([line, repeat, 1, lowerl])
                     else:
-                        stack.append([line, repeat, 1, line-1])
+                        stack.append([line, repeat, 1, upperl])
+                    stack_depth += 1
 
 
-            else:  # cycle without cycle in itself
+            else:  # cycle without cycle in itself or simple line
                 for _ in range(repeat):  # execution of one level cycle
                     self.parse_line(key, line)
                 if len(stack) > 0:  # going next same level cycle
@@ -189,7 +209,11 @@ class ParseMachine():
                         line += 1
                         continue
                     else:  # returning from cycle
+                        for var in self.list_watch.keys():
+                            if self.list_watch[var][0] > stack_depth:
+                                self.list_watch[var][1][stack_depth][0] += 1
                         line = stack[-1][0]
+                        stack_depth -= 1
                         continue
             line += 1
 
@@ -209,7 +233,7 @@ class ParseMachine():
                 if i >= len(key[2]):
                     raise ValueError("More variables in file than in key on line " + line + ".")
                 try:  # apllies types on found varibles
-                    if key[2][i][1] != []:
+                    if key[2][i][1] == 0:
                         self.saved[key[2][i][0]] = key[2][i][2](var)
                     else:
                         self.saved[key[2][i][0]].append(key[2][i][2](var))
@@ -222,11 +246,13 @@ class ParseMachine():
             char = self.text_read()
         if i >= len(key[2]):
             raise ValueError("More variables in file than in key on line " + line + ".")
-        try:
-            if key[2][i][1] != []:
+        try:  # apllies types on found varibles
+            if key[2][i][1] == 0:
                 self.saved[key[2][i][0]] = key[2][i][2](var)
-            else:
+            elif key[2][i][1] == 1:
                 self.saved[key[2][i][0]].append(key[2][i][2](var))
+            else:
+                self.list_watch[key[2][i][0]][1][-1][1].append(key[2][i][2](var))
         except ValueError:
             raise ValueError(var + " cannot be converted.")
         return None

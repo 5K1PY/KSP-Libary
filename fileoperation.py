@@ -69,9 +69,11 @@ k = file_operator()
 k.set_key("""
 |t-i
 n
-n: a
+n: m
+    m: k
+    1: a
 """)
-k.add_stream("file")
+k.add_stream("./data/file")
 print(k.parse())
-k.add_stream("file1")
+k.add_stream("./data/file1")
 print(k.parse())
