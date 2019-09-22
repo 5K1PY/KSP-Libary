@@ -1,7 +1,7 @@
 import time
-from calculation import *
-from parsing import *
-from streams import *
+from ksp.calculation import *
+from ksp.parsing import *
+from ksp.streams import *
 
 class file_operator():
     def __init__(self):
@@ -64,16 +64,3 @@ class file_operator():
     def time(self):
         """Returns time from start."""
         return time.time() - self.last_time
-
-k = file_operator()
-k.set_key("""
-|t-i
-n
-n: m
-    m: k
-    1: a
-""")
-k.add_stream("./data/file")
-print(k.parse())
-k.add_stream("./data/file1")
-print(k.parse())

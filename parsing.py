@@ -1,4 +1,4 @@
-from calculation import *
+from ksp.calculation import *
 
 class ParseMachine():
     def __init__(self, key):

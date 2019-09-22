@@ -1,4 +1,4 @@
-from fileoperation import *
+from ksp.fileoperation import *
 
 class parse_manager():
     def __init__(self, key, file_names, file_input_suffixes=None, file_output_suffixes=None, parallel=False):
@@ -7,7 +7,7 @@ class parse_manager():
         if file_input_suffixes == None:
             file_input_suffixes = [".in"] * len(file_names)
         if file_output_suffixes == None:
-            file_output_suffixes = [".in"] * len(file_names)
+            file_output_suffixes = [".out"] * len(file_names)
         self.file_names = file_names
         self.file_input_suffixes = file_input_suffixes
         self.file_output_suffixes = file_output_suffixes
