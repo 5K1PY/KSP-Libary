@@ -1,3 +1,6 @@
+import sys
+
+
 class ProgressBar():
     def __init__(self, length, start="|", end="|", full="█", empty=" ", show_percentage=True):
         """
@@ -42,6 +45,7 @@ class ProgressBar():
                 text += " "*(self.min_length - len(text))
             print(text, end="\r")
             self.min_length = max(self.min_length, len(text))
+            sys.stdout.flush()
         else:
             raise ValueError("Part should be between 0 and 1.")
 
@@ -62,3 +66,4 @@ class ProgressBar():
         if len(text) < self.min_length:
             text += " "*(self.min_length - len(text))
         print(text)
+        sys.stdout.flush()
