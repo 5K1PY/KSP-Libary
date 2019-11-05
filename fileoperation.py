@@ -1,10 +1,11 @@
-import time
-from ksp.calculation import *
-from ksp.parsing import *
-from ksp.streams import *
+from ksp.calculation import Calculator, BlankCalculator
+from ksp.parsing import ParseMachine
+from ksp.streams import Stream
+from ksp.progressbar import ProgresBar
+
 
 class file_operator():
-    def __init__(self):
+    def __init__(self, progressbar_enabled=False):
         self.start_time = time.time()
         self.last_time = self.start_time
         self.streams = []
@@ -13,19 +14,19 @@ class file_operator():
         """Sets key and initializes machine."""
         self.key = key
         self.machine = ParseMachine(key)
-    
+
     def add_stream(self, name, suffix1=".in", suffix2=".out"):
         """Adds new stream for reading and writing files."""
         self.streams.append(Stream(name, suffix1, suffix2))
-    
+
     def check_stream(self, stream_mark):
         """Finds stream by its name or index if it exists, otherwise throws error."""
-        if type(stream_mark) == str:
+        if isinstance(stream_mark, str):
             if stream_mark in list(map(lambda x: x.name, self.streams)):
                 return self.streams.index(stream_mark, key=lambda x: x.name)
             else:
                 raise ValueError("Unknown stream.")
-        elif type(stream_mark) == int:
+        elif isinstance(stream_mark, int):
             return stream_mark
         else:
             raise ValueError("Stream_mark should be index or name of stream.")

@@ -18,7 +18,7 @@ class ProgresBar():
         self.empty = empty
         self.show_percantage = show_percentage
         self.min_length = 0
-    
+
     def display_bar(self, part, text=""):
         """
         Displays progress bar.
@@ -37,14 +37,14 @@ class ProgresBar():
             text += f"{self.start}{self.full*(round(part * self.length))}"  # add start and fulled part of progress bar
             text += f"{self.empty*(self.length-round(part * self.length))}{self.end}"  # add empty part and end of progress bar
             if self.show_percantage:
-                text += f" {round(100 * part)}%" # add percentage
+                text += f" {round(100 * part)}%"  # add percentage
             if len(text) < self.min_length:
                 text += " "*(self.min_length - len(text))
             print(text, end="\r")
             self.min_length = max(self.min_length, len(text))
         else:
             raise ValueError("Part should be between 0 and 1.")
-    
+
     def end_bar(self, text=""):
         """
         Displays full progress bar with newline on end.

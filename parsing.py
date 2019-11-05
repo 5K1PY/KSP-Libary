@@ -17,13 +17,13 @@ class ParseMachine():
         for line in key:
             if line.replace(" ", "") == "":
                 continue  # skip empty line
-            
+
             if applied_settings is False:  # appling settings needed before indentation
                 self.apply_settings()
                 applied_settings = True
-            
+
             self.key.append([0, [], None])
-            
+
             (i, indentation) = self.get_indentation(line, l)
             if indentation > 0 and l == 0:  # getting indentation
                 raise IndentationError("Wrong indentation on line " + l + ". No previous cycle.")
@@ -36,7 +36,7 @@ class ParseMachine():
                 self.key.pop()
                 applied_settings = False
                 continue
-            
+
             if line.count(":") == 0:  # getting repeat
                 self.key[-1][1] = BlankCalculator()
             elif line.count(":") == 1:
@@ -80,8 +80,7 @@ class ParseMachine():
                         raise ValueError("Unknown value on line " + l + ": " + s)
                     self.key[-1][2][i][2] = read_type
                     i += 1
-                
-    
+
             l = str(int(l) + 1)
         self.key.append([0, None])
 
@@ -100,7 +99,7 @@ class ParseMachine():
                 raise ValueError("Unknown value: " + value)
             else:
                 self.settings[setting] = (value, self.settings[setting][1])
-    
+
     def apply_settings(self):
         """Apllies all settings"""
         for (setting, value) in self.settings.items():
@@ -146,7 +145,7 @@ class ParseMachine():
             key = self.key[line]
             if key[1] is None:
                 break
-            
+
             repeat = key[1].calculate(self.saved, self.list_watch)  # determaning number of repeats
             if repeat == 0:
                 raise ValueError(f"Repeating line {line} zero times.")
@@ -154,7 +153,7 @@ class ParseMachine():
                 raise ValueError(f"Repeating line {line} less than zero times.")
             elif repeat % 1 != 0:
                 raise ValueError(f"Repeating line {line} not whole number of times.")
-            
+
             if key[2][0][0] not in self.saved:  # defining variables
                 for (variable, t, _) in key[2]:
                     if t == 0:
@@ -167,7 +166,7 @@ class ParseMachine():
                         for _ in range(t-1):
                             self.list_watch[variable][1][-1][1].append([])
                             self.list_watch[variable][1].append([0, self.list_watch[variable][1][-1][1][0]])
-            
+
             if line + 1 != len(self.key) and key[0] < self.key[line + 1][0]:  # cycle with cylce in itself
                 if len(stack) != 0 and stack[-1][0] == line:
                     if stack[-1][1] == stack[-1][2]:  # returning from cycle
