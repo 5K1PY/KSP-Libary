@@ -1,11 +1,11 @@
+import time
 from ksp.calculation import Calculator, BlankCalculator
 from ksp.parsing import ParseMachine
 from ksp.streams import Stream
-from ksp.progressbar import ProgresBar
 
 
-class file_operator():
-    def __init__(self, progressbar_enabled=False):
+class FileOperator():
+    def __init__(self):
         self.start_time = time.time()
         self.last_time = self.start_time
         self.streams = []

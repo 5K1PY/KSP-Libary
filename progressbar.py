@@ -1,4 +1,4 @@
-class ProgresBar():
+class ProgressBar():
     def __init__(self, length, start="|", end="|", full="█", empty=" ", show_percentage=True):
         """
         Creates itself.
