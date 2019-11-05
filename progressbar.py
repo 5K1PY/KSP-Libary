@@ -1,5 +1,16 @@
 class ProgresBar():
     def __init__(self, length, start="|", end="|", full="█", empty=" ", show_percentage=True):
+        """
+        Creates itself.
+
+        Arguments:
+        length {int} -- Number of characters in progress bar
+        start {str} -- What progress bars starts with
+        end {str} -- What progress bars ends with
+        full {str} -- How should look like full parts of progress bar
+        empty {str} -- How should look like empty parts of progress bar
+        show_percentage {bool} -- If percentage should be seen after progress bar
+        """
         self.length = length
         self.start = start
         self.end = end
@@ -8,7 +19,14 @@ class ProgresBar():
         self.show_percantage = show_percentage
         self.min_length = 0
     
-    def print_bar(self, part, text=""):
+    def display_bar(self, part, text=""):
+        """
+        Displays progress bar.
+
+        Arguments:
+        part {int, float} -- Part of progress bar which should be filled
+        text {str} -- Text which should be displayed before progress bar
+        """
         if not isinstance(part, (int, float)):
             raise TypeError("Part should be int or float between 0 and 1.")
         if not isinstance(text, str):
@@ -27,7 +45,13 @@ class ProgresBar():
         else:
             raise ValueError("Part should be between 0 and 1.")
     
-    def print_full_bar(self, text=""):
+    def end_bar(self, text=""):
+        """
+        Displays full progress bar with newline on end.
+
+        Arguments:
+        text {str} -- Text which should be displayed before progress bar
+        """
         if not isinstance(text, str):
             text = str(text)
         if text != "":
